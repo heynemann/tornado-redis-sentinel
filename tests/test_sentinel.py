@@ -41,6 +41,23 @@ class TestSentinelClient(TestCase):
         self.wait()  # blocks
 
         expect(result).to_include("connected")
+        expect(result["connected"]).to_be_true()
+
+    def test_connect_updates_sentinels(self):
+        result = {}
+
+        def callback():
+            result["connected"] = True
+            expect(self.client.connection_status).to_equal("CONNECTED")
+            self.stop()
+
+        self.connect(callback)
+        self.wait()  # blocks
+
+        expect(result).to_include("connected")
+        expect(self.client.sentinels).to_length(5)
+        expect(self.client.sentinels).to_include("127.0.0.1:57573")
+
 
     def test_connect_fails_when_no_available_sentinels(self):
         result = {}
