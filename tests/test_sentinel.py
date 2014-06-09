@@ -14,7 +14,7 @@ class TestSentinelClient(TestCase):
         super(TestSentinelClient, self).setUp()
         self.client = SentinelClient(io_loop=self.io_loop)
 
-    def connect(self, callback=None, client=None, on_disconnect=None):
+    def connect(self, callback=None, client=None, on_disconnect=None, master_name='master'):
         if callback is None:
             callback = self.stop
         if client is None:
@@ -25,7 +25,7 @@ class TestSentinelClient(TestCase):
         # use two invalid ports and one valid port
         client.connect(
             sentinels=['127.0.0.1:2222', '127.0.0.1:2223', '127.0.0.1:57574', '127.0.0.1:2224'],
-            master_name="master",
+            master_name=master_name,
             callback=callback
         )
 
@@ -96,6 +96,22 @@ class TestSentinelClient(TestCase):
 
         expect(result).to_include("timeout")
         expect(result["timeout"]).to_be_true()
+
+    def test_non_existent_master(self):
+        result = {}
+
+        def callback():
+            result["master_error"] = True
+            expect(self.client.connection_status).to_equal("NO_SUCH_MASTER_WITH_THAT_NAME")
+            expect(self.client.connection_error).to_equal("ERR No such master with that name")
+            self.stop()
+
+        self.connect(callback=callback, master_name='puppet')
+
+        self.wait()  # blocks
+
+        expect(result).to_include("master_error")
+        expect(result["master_error"]).to_be_true()
 
     @gen.engine
     def test_set_command(self):

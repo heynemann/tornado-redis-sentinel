@@ -85,6 +85,13 @@ class SentinelClient(Client):
         # 'name', '10.10.10.10:26379', 'ip', '10.10.10.10', 'port', '26379', 'runid', '7ae5839dec4ce7685b7db89d365e01b0b1dba28f', 'flags', 'sentinel', 'pending-commands', '0', 'last-ping-sent', '0', 'last-ok-ping-reply', '341', 'last-ping-reply', '341', 'down-after-milliseconds', '5000', 'last-hello-message', '300', 'voted-leader', '?', 'voted-leader-epoch', '0'
         sentinels = args[0]
 
+        if isinstance(sentinels, Exception) and sentinels.message == 'ERR No such master with that name':
+            self.connection_status = "NO_SUCH_MASTER_WITH_THAT_NAME"
+            self.connection_error = sentinels.message
+            self._connect_callback()
+            self._connect_callback = None
+            return
+
         if sentinels is not None:
             for sentinel in sentinels:
                 name = sentinel[1]
