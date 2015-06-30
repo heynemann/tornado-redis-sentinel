@@ -35,6 +35,9 @@ class SentinelClient(Client):
         if master_name is None or not master_name or not isinstance(master_name, six.string_types):
             raise ValueError("master_name argument must be a valid name")
 
+        if callback is None:
+            raise ValueError("callback must be supplied and you should verify the `connection_status` property of the SentinelClient in your callback to make sure it's `CONNECTED`.")
+
         self.next_sentinel = 0
         self.timeout = timeout
 
